@@ -6,20 +6,17 @@
 # Prereqs:
 #   - Android IP Camera app running, H.264 mode, port 4444 (default)
 #   - MediaMTX running locally with mediamtx.yml from this bundle
-#
-# Usage: ./bridge.sh
 
 set -u
 
 CAM_URL="http://127.0.0.1:4444/video/h264"
 MTX_URL="rtsp://publisher:PUB_CHANGE_ME@127.0.0.1:8554/live"
-DIR="$(cd "$(dirname "$0")" && pwd)"
-LOG="$DIR/logs/bridge.log"
 
-# Keep the CPU awake while Termux is backgrounded/screen off.
 command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock
 
-echo "$(date) : bridge starting" >> "$LOG"
+trap 'echo "$(date) : bridge stopping"; exit 0' TERM INT
+
+echo "$(date) : bridge starting"
 
 while true; do
   ffmpeg -nostdin -loglevel warning \
@@ -27,8 +24,8 @@ while true; do
     -i "$CAM_URL" \
     -c copy -an \
     -f rtsp -rtsp_transport tcp \
-    "$MTX_URL" >> "$LOG" 2>&1
+    "$MTX_URL"
 
-  echo "$(date) : ffmpeg exited (camera app down / network drop?), retrying in 2s" >> "$LOG"
+  echo "$(date) : ffmpeg exited (camera app down / network drop?), retrying in 2s"
   sleep 2
 done
