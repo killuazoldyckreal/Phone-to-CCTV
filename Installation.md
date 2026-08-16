@@ -40,7 +40,12 @@ Install the required packages in Termux:
 
 ```bash
 pkg update && pkg upgrade
-pkg install ffmpeg nodejs
+pkg install ffmpeg nodejs git
+```
+
+Clone the repo
+```bash
+cd ~ && git clone https://github.com/killuazoldyckreal/Phone-to-CCTV.git
 ```
 
 Make sure the following files are executable:
