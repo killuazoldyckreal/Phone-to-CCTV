@@ -1,4 +1,4 @@
-# LAN Camera Stream — Redmi Note 6 Pro
+# Phone to CCTV
 
 Pipeline: **Android IP Camera app** (hardware H.264 encode) → **ffmpeg bridge** (stream-copy, no re-encode) → **MediaMTX** (relay) → browser viewers (WebRTC, HLS fallback).
 
