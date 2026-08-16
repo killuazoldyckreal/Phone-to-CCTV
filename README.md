@@ -19,6 +19,30 @@ Turn an Android phone into a low-latency CCTV camera for your local network.
 * 🌐 Browser-based viewer accessible from devices on the same LAN
 * 🔐 Viewer authentication through MediaMTX
 
+> [!WARNING]
+> ## Not Recommended as a Permanent CCTV Camera
+> This project is intended primarily for **temporary, experimental or educational** monitoring. It should generally **not be treated as a replacement for a purpose-built CCTV/IP camera for 24/7 security**.
+
+A phone running continuously performing continuous camera capture, encoding, networking, and server duties can heat up pretty fast and can cause:
+- Performance throttling
+- Dropped frames
+- Stream interruptions
+- Faster battery degradation
+- Unexpected shutdowns
+
+## Recommended Use
+
+This project is a good fit for:
+- Learning about RTSP, FFmpeg, and MediaMTX
+- Temporary monitoring
+- Home/lab experiments
+- Short-term LAN surveillance
+- Testing an old Android phone as a camera
+- Situations where occasional downtime is acceptable
+
+> [!IMPORTANT]
+> If you do use a phone, prioritize cooling, reliable power, battery health, network stability, automatic recovery, and regular temperature checks.
+
 ## Architecture
 
 ```text
