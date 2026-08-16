@@ -112,7 +112,6 @@ async function connectWebRTC(){
 
   pc = new RTCPeerConnection();
   pc.addTransceiver('video', { direction: 'recvonly' });
-  pc.addTransceiver('audio', { direction: 'recvonly' });
 
   pc.ontrack = (e) => { video.srcObject = e.streams[0]; };
 
