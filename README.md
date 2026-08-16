@@ -88,7 +88,7 @@ MediaMTX then distributes the same stream to browser viewers using WebRTC or HLS
 
 ## Quick Start
 
-After completing the [installation](Installation) and configuration:
+After completing the [installation](Installation.md) and configuration:
 
 ```bash
 cd ~/Phone-to-CCTV
