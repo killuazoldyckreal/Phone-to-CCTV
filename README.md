@@ -1,78 +1,193 @@
 # Phone to CCTV
 
-Pipeline: **Android IP Camera app** (hardware H.264 encode) → **ffmpeg bridge** (stream-copy, no re-encode) → **MediaMTX** (relay) → browser viewers (WebRTC, HLS fallback).
+Turn an Android phone into a low-latency CCTV camera for your local network.
 
-## 1. Install & configure Android IP Camera
-- Install from F-Droid: `com.github.digitallyrefined.androidipcamera`
-- In app settings: camera = rear, resolution = 1280×720, frame rate = 30, encoder = H.264, bitrate ≈ 2 Mbps, audio = off, "keep screen off while streaming" = on.
-- Confirm it's serving at `https://<phone-ip>:4444/video/h264` (self-signed cert — that's expected).
+**Phone to CCTV** uses an Android IP Camera app for video capture, FFmpeg to bridge the camera stream, MediaMTX to distribute it, and a browser-based viewer for watching the live feed.
 
-## 2. Install MediaMTX in Termux
-```bash
-pkg install -y wget tar
-LATEST=$(curl -s https://api.github.com/repos/bluenviron/mediamtx/releases/latest | grep tag_name | cut -d '"' -f4)
-wget https://github.com/bluenviron/mediamtx/releases/download/${LATEST}/mediamtx_${LATEST}_linux_arm64.tar.gz
-mkdir -p ~/mediamtx && tar xzf mediamtx_${LATEST}_linux_arm64.tar.gz -C ~/mediamtx
-cp mediamtx.yml ~/mediamtx/       # from this bundle — edit the two passwords first
-cd ~/mediamtx && ./mediamtx mediamtx.yml
+## Features
+
+* 📱 Uses an Android phone as the CCTV camera
+* 🎥 H.264 video streaming
+* ⚡ WebRTC playback for low latency
+* 📺 Automatic HLS fallback
+* 🔄 Automatic FFmpeg reconnection if the camera stream drops
+* 🚀 Start the complete system with a single command
+* 🛑 Stop all services cleanly
+* 📊 Check the status of every service
+* 📝 Separate logs for MediaMTX, FFmpeg, and the viewer server
+* 🔋 Termux wakelock support for long-running operation
+* 🌐 Browser-based viewer accessible from devices on the same LAN
+* 🔐 Viewer authentication through MediaMTX
+
+## Architecture
+
+```text
+Android Phone Camera
+        │
+        │ H.264 Stream
+        ▼
+┌─────────────────┐
+│ Android IP      │
+│ Camera App      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│     FFmpeg      │
+│  Stream Bridge  │
+│                 │
+│   No Re-encode  │
+└────────┬────────┘
+         │
+         │ RTSP
+         ▼
+┌─────────────────┐
+│    MediaMTX     │
+│                 │
+│ Stream Relay    │
+└──────┬─────┬────┘
+       │     │
+       │     │
+       ▼     ▼
+    WebRTC   HLS
+       │     │
+       └──┬──┘
+          ▼
+┌─────────────────┐
+│ Browser Viewer  │
+└─────────────────┘
 ```
 
-## 3. Start the bridge (in a second Termux session)
+The video is encoded by the Android IP Camera app. FFmpeg copies the H.264 stream without re-encoding, reducing additional CPU usage.
+
+MediaMTX then distributes the same stream to browser viewers using WebRTC or HLS.
+
+## Quick Start
+
+After completing the installation and configuration:
+
 ```bash
-cp bridge.sh ~/ && chmod +x ~/bridge.sh
-# edit PUB_CHANGE_ME in both bridge.sh and mediamtx.yml to match
-~/bridge.sh
-```
-Logs land in `~/bridge.log`. It auto-restarts ffmpeg if the camera app or Wi-Fi drops.
-
-## 4. Serve the viewer page (third Termux session)
-```bash
-cp server.js viewer.html ~/viewer/ 2>/dev/null || (mkdir -p ~/viewer && cp server.js viewer.html ~/viewer/)
-cd ~/viewer
-npm install hls.js && cp node_modules/hls.js/dist/hls.min.js .   # one-time, needs internet
-node server.js
-```
-Viewers open `http://<phone-ip>:8080/` and log in with the `viewer` / `VIEW_CHANGE_ME` credentials set in `mediamtx.yml`.
-
-## 5. Keep it alive
-- Termux → long-press notification → enable "Acquire wakelock", or the sessions running `bridge.sh` will call `termux-wake-lock` automatically.
-- Disable battery optimization for Termux in Android settings, or the OS will kill the sessions when the screen is off.
-- Enable "limit to 80% charge" in MIUI battery settings if running 24/7 on charger (see Android IP Camera's own warning about swelling batteries).
-
-## Direct stream URLs (for testing without the viewer page)
-| Protocol | URL |
-|---|---|
-| RTSP (VLC, ffplay) | `rtsp://viewer:VIEW_CHANGE_ME@<phone-ip>:8554/live` |
-| HLS | `http://<phone-ip>:8888/live/index.m3u8` |
-| WebRTC (MediaMTX's own test page) | `http://<phone-ip>:8889/live` |
-
-## Roadmap test commands
-
-**Latency check:**
-```bash
-ffplay -fflags nobuffer -flags low_delay rtsp://viewer:VIEW_CHANGE_ME@<phone-ip>:8554/live
+cd ~/Phone-to-CCTV
+./start.sh
 ```
 
-**Viewer / reader count (MediaMTX API):**
+This starts:
+
+* MediaMTX
+* FFmpeg camera bridge
+* Browser viewer server
+
+Check the system:
+
 ```bash
-curl -s http://<phone-ip>:9997/v3/paths/get/live | python3 -m json.tool
+./status.sh
 ```
 
-**CPU / RAM / thermal on the phone (in Termux):**
+Stop everything:
+
 ```bash
-top -n 1 | head -20
-cat /sys/class/thermal/thermal_zone*/temp   # values are millidegrees C
+./stop.sh
 ```
 
-**Simulate N viewers from a PC** (repeat with more concurrent processes to hit 5 → 10 → 25 → 50):
-```bash
-for i in $(seq 1 10); do
-  ffplay -loglevel quiet rtsp://viewer:VIEW_CHANGE_ME@<phone-ip>:8554/live &
-done
+## Viewing the Camera
+
+Open the following address from another device connected to the same local network:
+
+```text
+http://PHONE-IP:8080/
 ```
 
-**Dropped frames / bitrate:** watch `~/bridge.log` (ffmpeg prints frame= / bitrate= periodically) or check the MediaMTX API path stats above (`bytesReceived`, `readers`).
+For example:
 
-## Notes on the roadmap items
-- **Step 8 (multicast):** MediaMTX doesn't multicast RTSP by default on Android's Wi-Fi stack in a phone-as-AP scenario; if 25–50 viewers saturate the LAN, the practical fix is usually a dedicated 5GHz AP/router rather than multicast, since most consumer Wi-Fi APs handle multicast poorly. Revisit only if a real router is in the loop.
-- **Step 9 (thermal/power):** the encode happens once (hardware H.264 in the camera app) and the bridge only stream-copies, so CPU load shouldn't scale with viewer count — MediaMTX fans out the same encoded packets. If temps still climb, drop to 720p@20fps or 1.5 Mbps first before touching the resolution roadmap for 1080p.
+```text
+http://192.168.1.25:8080/
+```
+
+The viewer attempts to connect using **WebRTC** for low latency.
+
+If WebRTC is unavailable, it automatically falls back to **HLS**.
+
+## Service Management
+
+### Start
+
+```bash
+./start.sh
+```
+
+Starts all required services in the background.
+
+### Status
+
+```bash
+./status.sh
+```
+
+Displays the status and PID of:
+
+* MediaMTX
+* FFmpeg bridge
+* Viewer server
+
+### Stop
+
+```bash
+./stop.sh
+```
+
+Stops all running services and releases the Termux wakelock.
+
+## Logs
+
+Logs are stored in:
+
+```text
+logs/
+```
+
+Available logs:
+
+```text
+logs/mediamtx.log
+logs/bridge.log
+logs/viewer.log
+```
+
+Watch a log in real time:
+
+```bash
+tail -f logs/bridge.log
+```
+
+## Stream Endpoints
+
+Replace `PHONE-IP` with the Android phone's local IP address.
+
+| Protocol        | URL                                              |
+| --------------- | ------------------------------------------------ |
+| Browser Viewer  | `http://PHONE-IP:8080/`                          |
+| RTSP            | `rtsp://viewer:VIEW_PASSWORD@PHONE-IP:8554/live` |
+| HLS             | `http://PHONE-IP:8888/live/index.m3u8`           |
+| MediaMTX WebRTC | `http://PHONE-IP:8889/live`                      |
+
+## Documentation
+
+For complete installation, dependency setup, Android IP Camera configuration, MediaMTX configuration, authentication setup, and troubleshooting, see:
+
+```text
+INSTALLATION.md
+```
+
+## How It Works
+
+1. The Android IP Camera app captures video and encodes it as H.264.
+2. `bridge.sh` uses FFmpeg to copy the stream into MediaMTX.
+3. MediaMTX receives the stream at the `live` path.
+4. MediaMTX makes the stream available through RTSP, WebRTC, and HLS.
+5. `server.js` serves the browser viewer.
+6. `viewer.html` attempts WebRTC playback first.
+7. If WebRTC fails, the viewer falls back to HLS.
+
+## License
+
+This project is intended for personal and local-network CCTV usage.
