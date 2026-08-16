@@ -1,42 +1,69 @@
 ###############################################################################
-# MediaMTX config
-# Run: ./mediamtx mediamtx.yml
+# MediaMTX configuration
+#
+# SECURITY WARNING:
+#
+# This project is intended for use on a trusted private LAN only.
+#
+# Do NOT expose RTSP, HLS, WebRTC, or the viewer server directly to the
+# public internet.
+#
+# Authentication credentials must be changed before using the project on a LAN.
 ###############################################################################
 
 logLevel: info
 
-# --- API (used for viewer count / status, LAN only, no auth by default) ----
-api: yes
-apiAddress: :9997
+# --- API ---------------------------------------------------------------------
+# Disabled because the current project does not use the MediaMTX API.
+# This avoids exposing an unnecessary management endpoint.
+api: no
 
-# --- RTSP: local ingest port for the ffmpeg bridge --------------------------
+# --- RTSP --------------------------------------------------------------------
+# Local ingest port used by bridge.sh.
 rtsp: yes
 rtspAddress: :8554
-protocols: [tcp]          # tcp only avoids UDP packet loss on flaky Wi-Fi
+
+# TCP only avoids UDP packet loss on unstable Wi-Fi.
+protocols: [tcp]
 
 rtmp: no
 srt: no
 
-# --- HLS: fallback for Smart TVs / browsers without WebRTC ------------------
+# --- HLS ---------------------------------------------------------------------
+# Fallback for browsers/devices where WebRTC is unavailable.
 hls: yes
 hlsAddress: :8888
 hlsAlwaysRemux: yes
-hlsVariant: lowLatency     # LL-HLS, ~1-2s latency instead of ~6-10s
+hlsVariant: lowLatency
 hlsSegmentCount: 7
 hlsSegmentDuration: 0.5s
 hlsPartDuration: 200ms
+
+# The viewer may be accessed from devices on the same LAN.
 hlsAllowOrigin: '*'
 
-# --- WebRTC: primary low-latency path for PC/phone/tablet browsers ---------
+# --- WebRTC ------------------------------------------------------------------
+# Primary low-latency streaming method.
 webrtc: yes
 webrtcAddress: :8889
+
+# Encryption is disabled for simple private-LAN usage.
+#
+# Do NOT expose this service directly to the public internet while encryption
+# is disabled.
 webrtcEncryption: no
+
 webrtcAllowOrigin: '*'
 webrtcLocalUDPAddress: :8189
-webrtcIPsFromInterfaces: yes   # advertise the phone's LAN IP automatically
 
-# --- Auth --------------------------------------------------------------------
-# CHANGE both passwords before exposing this on your LAN.
+# Automatically advertise the phone's current LAN IP.
+webrtcIPsFromInterfaces: yes
+
+# --- Authentication ----------------------------------------------------------
+# CHANGE BOTH PASSWORDS BEFORE USING ON YOUR LAN.
+#
+# Basic authentication over plain HTTP is suitable only for trusted private
+# networks. It should not be treated as secure for public internet exposure.
 authInternalUsers:
   - user: publisher
     pass: PUB_CHANGE_ME
@@ -52,11 +79,12 @@ authInternalUsers:
       - action: playback
         path: live
 
-  - user: any            # deny anonymous access entirely (default-deny)
+  # Default deny.
+  - user: any
     permissions: []
 
-# --- Paths --------------------------------------------------------------------
+# --- Paths -------------------------------------------------------------------
 paths:
   live:
-    source: publisher      # only accepts a push from the ffmpeg bridge
-    sourceOnDemand: no      # keep the path always active, not only when a viewer connects
+    source: publisher
+    sourceOnDemand: no
