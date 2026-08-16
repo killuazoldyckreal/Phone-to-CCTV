@@ -213,5 +213,5 @@ INSTALLATION.md
 7. If WebRTC fails, the viewer falls back to HLS.
 
 ## License
-
+[MIT License](LICENSE)
 This project is intended for personal and local-network CCTV usage.
