@@ -22,7 +22,7 @@ is_running() {
     local cmd
     cmd="$(ps -p "$pid" -o args= 2>/dev/null)"
 
-    echo "$cmd" | grep -q "$expected"
+    echo "$cmd" | grep -Fq "$expected"
 }
 
 start_process() {
