@@ -40,7 +40,7 @@ Install the required packages in Termux:
 
 ```bash
 pkg update && pkg upgrade
-pkg install ffmpeg nodejs git
+pkg install ffmpeg nodejs git util-linux
 ```
 
 Clone the repo
