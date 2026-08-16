@@ -11,7 +11,7 @@
 
 set -u
 
-CAM_URL="https://127.0.0.1:4444/video/h264"
+CAM_URL="http://127.0.0.1:4444/video/h264"
 MTX_URL="rtsp://publisher:PUB_CHANGE_ME@127.0.0.1:8554/live"
 LOG="$HOME/bridge.log"
 
@@ -22,7 +22,6 @@ echo "$(date) : bridge starting" >> "$LOG"
 
 while true; do
   ffmpeg -nostdin -loglevel warning \
-    -tls_verify 0 \
     -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 \
     -i "$CAM_URL" \
     -c copy -an \
