@@ -13,7 +13,8 @@ set -u
 
 CAM_URL="http://127.0.0.1:4444/video/h264"
 MTX_URL="rtsp://publisher:PUB_CHANGE_ME@127.0.0.1:8554/live"
-LOG="$HOME/bridge.log"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+LOG="$DIR/logs/bridge.log"
 
 # Keep the CPU awake while Termux is backgrounded/screen off.
 command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock
