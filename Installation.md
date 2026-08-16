@@ -392,7 +392,3 @@ Release it with:
 ```bash
 termux-wake-unlock
 ```
-
-> [!CAUTION]
-> If the phone will run as a CCTV camera for long periods, keep it connected to a reliable power source and monitor battery temperature.
-
