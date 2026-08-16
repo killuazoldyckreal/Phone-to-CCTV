@@ -22,7 +22,7 @@ hls: yes
 hlsAddress: :8888
 hlsAlwaysRemux: yes
 hlsVariant: lowLatency     # LL-HLS, ~1-2s latency instead of ~6-10s
-hlsSegmentCount: 4
+hlsSegmentCount: 7
 hlsSegmentDuration: 0.5s
 hlsPartDuration: 200ms
 hlsAllowOrigin: '*'
