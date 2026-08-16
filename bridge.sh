@@ -12,12 +12,12 @@ MTX_URL="rtsp://publisher:PUB_CHANGE_ME@127.0.0.1:8554/live"
 
 command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock
 
-trap 'echo "[$(date "+%Y-%m-%d %H:%M:%S")] Bridge stopping..." >> "$LOG"; exit 0' TERM INT
+trap 'echo "[$(date "+%Y-%m-%d %H:%M:%S")] Bridge stopping..."; exit 0' TERM INT
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Bridge starting..." >> "$LOG"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Bridge starting..."
 
 while true; do
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting FFmpeg bridge..." >> "$LOG"
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting FFmpeg bridge..."
   ffmpeg -nostdin -loglevel warning \
     -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 \
     -i "$CAM_URL" \
@@ -27,6 +27,6 @@ while true; do
     
   EXIT_CODE=$?
   
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] FFmpeg exited with code $EXIT_CODE. Retrying in 5 seconds..." >> "$LOG"
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] FFmpeg exited with code $EXIT_CODE. Retrying in 5 seconds..." 
   sleep 5
 done
