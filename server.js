@@ -3,6 +3,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 const PORT = 8080;
 const ROOT = __dirname;
@@ -29,5 +30,19 @@ http.createServer((req, res) => {
     res.end(data);
   });
 }).listen(PORT, '0.0.0.0', () => {
-  console.log(`Viewer page: http://<phone-ip>:${PORT}/`);
+  const interfaces = os.networkInterfaces();
+  let localIP = 'localhost';
+  
+  for (const name of Object.keys(interfaces)) {
+    for (const net of interfaces[name]) {
+      const familyV4Value = typeof net.family === 'string' ? 'IPv4' : 4;
+      if (net.family === familyV4Value && !net.internal) {
+        localIP = net.address;
+        break;
+      }
+    }
+    if (localIP !== 'localhost') break;
+  }
+
+  console.log(`Viewer page: http://${localIP}:${PORT}/`);
 });
